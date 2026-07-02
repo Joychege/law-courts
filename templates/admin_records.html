@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Attendance Records — Githunguri Law Courts{% endblock %}
+
+{% block content %}
+<section class="panel">
+  {% include "_admin_subnav.html" %}
+
+  <h2>Attendance Records</h2>
+  <p class="lede">All visitor entries recorded at Githunguri Law Courts.</p>
+
+  <form class="filter-row" method="GET" action="{{ url_for('admin_records') }}">
+    <div class="field">
+      <label for="q">Search</label>
+      <input type="text" id="q" name="q" value="{{ search }}" placeholder="Name, purpose, or host…">
+    </div>
+    <div class="field">
+      <label for="date_from">From</label>
+      <input type="date" id="date_from" name="date_from" value="{{ date_from }}">
+    </div>
+    <div class="field">
+      <label for="date_to">To</label>
+      <input type="date" id="date_to" name="date_to" value="{{ date_to }}">
+    </div>
+    <button type="submit" class="btn-secondary">Filter</button>
+    {% if search or date_from or date_to %}
+      <a class="btn-secondary" href="{{ url_for('admin_records') }}">Clear</a>
+    {% endif %}
+  </form>
+
+  <div class="admin-toolbar">
+    <span class="count-badge">{{ total_filtered }} of {{ total }} entr{{ 'y' if total == 1 else 'ies' }}</span>
+    <div class="actions">
+      <a class="btn-secondary" href="{{ url_for('admin_export') }}">Export CSV</a>
+      <form method="POST" action="{{ url_for('admin_backup_now') }}" style="display:inline;">
+        <button type="submit" class="btn-secondary">Backup Now</button>
+      </form>
+      <form method="POST" action="{{ url_for('admin_logout') }}" style="display:inline;">
+        <button type="submit" class="btn-secondary">Lock</button>
+      </form>
+    </div>
+  </div>
+
+  {% if rows %}
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Phone / ID</th>
+          <th>Visiting</th>
+          <th>Date</th>
+          <th>Time In</th>
+          <th>Time Out</th>
+          <th>Purpose</th>
+          <th>Signature</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td class="muted">{{ '%04d'|format(r['id']) }}</td>
+          <td>{{ r['name'] }}</td>
+          <td class="muted">{{ r['phone'] }}</td>
+          <td>{{ r['host'] }}</td>
+          <td class="muted">{{ r['visit_date'] }}</td>
+          <td class="muted">{{ r['visit_time'] }}</td>
+          <td class="muted">
+            {% if r['time_out'] %}
+              {{ r['time_out'] }}
+            {% else %}
+              <span class="status-pill status-in">In</span>
+            {% endif %}
+          </td>
+          <td>{{ r['purpose'] }}</td>
+          <td><img class="sig-thumb" src="{{ r['signature'] }}" alt="signature"></td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              {% if not r['time_out'] %}
+              <form method="POST" action="{{ url_for('admin_checkout', entry_id=r['id']) }}">
+                <button type="submit" class="btn-danger" style="color:var(--gold-bright); border-color:var(--gold);">Check Out</button>
+              </form>
+              {% endif %}
+              <form method="POST" action="{{ url_for('admin_delete', entry_id=r['id']) }}"
+                    onsubmit="return confirm('Delete this attendance record? This cannot be undone.');">
+                <button type="submit" class="btn-danger">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% set base_args = {'q': search, 'date_from': date_from, 'date_to': date_to} %}
+    <a class="{{ 'disabled' if page <= 1 else '' }}"
+       href="{{ url_for('admin_records', page=page-1, **base_args) }}">&laquo; Prev</a>
+    <span class="current">Page {{ page }} of {{ total_pages }}</span>
+    <a class="{{ 'disabled' if page >= total_pages else '' }}"
+       href="{{ url_for('admin_records', page=page+1, **base_args) }}">Next &raquo;</a>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <div class="big">{{ 'No matching entries' if (search or date_from or date_to) else 'No entries yet' }}</div>
+    <div>{{ 'Try different search or date filters.' if (search or date_from or date_to) else 'Visitor records will appear here once submitted.' }}</div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

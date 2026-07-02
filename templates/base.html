@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Githunguri Law Courts — Attendance Register{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <svg class="crest" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="26" y1="6" x2="26" y2="40" stroke-width="2"/>
+      <line x1="10" y1="14" x2="42" y2="14" stroke-width="2"/>
+      <path d="M10 14 L4 24 A8 8 0 0 0 16 24 Z" stroke-width="1.6"/>
+      <path d="M42 14 L36 24 A8 8 0 0 0 48 24 Z" stroke-width="1.6"/>
+      <line x1="18" y1="44" x2="34" y2="44" stroke-width="2"/>
+      <circle cx="26" cy="6" r="2.4" stroke-width="1.6"/>
+    </svg>
+    <div class="eyebrow">Republic of Kenya · Judiciary</div>
+    <h1>Githunguri Law Courts</h1>
+    <p class="subtitle">Visitor Attendance Register</p>
+    <div class="rule"></div>
+  </header>
+
+  <nav class="tabs">
+    <a href="{{ url_for('index') }}" class="{{ 'active' if active=='entry' else '' }}">New Entry</a>
+    <a href="{{ url_for('admin_records') if session.get('is_admin') else url_for('admin_login') }}"
+       class="{{ 'active' if active=='admin' else '' }}">Admin Access</a>
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  <footer class="page-footer">GITHUNGURI LAW COURTS · ATTENDANCE REGISTER · RECORDS STORED SECURELY</footer>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

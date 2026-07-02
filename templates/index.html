@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}New Entry — Githunguri Law Courts{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <h2>Register Your Visit</h2>
+  <p class="lede">Please complete every field accurately and sign below before proceeding.</p>
+
+  <form id="entryForm" method="POST" action="{{ url_for('submit') }}">
+    <div class="field">
+      <label for="fName">Full Name</label>
+      <input type="text" id="fName" name="name" placeholder="e.g. Wanjiru Kamau" required>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="fPhone">Phone Number / National ID</label>
+        <input type="text" id="fPhone" name="phone" placeholder="e.g. 0712 345 678" required>
+      </div>
+      <div class="field">
+        <label for="fHost">Person / Office to Visit</label>
+        <input type="text" id="fHost" name="host" placeholder="e.g. Registrar's Office" required>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="fDate">Date</label>
+        <input type="date" id="fDate" name="date" value="{{ today }}" required>
+      </div>
+      <div class="field">
+        <label for="fTime">Time In</label>
+        <input type="time" id="fTime" name="time" value="{{ now }}" required>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="fPurpose">Purpose of Visit</label>
+      <select id="fPurpose" name="purpose" required>
+        <option value="" disabled selected>Select purpose…</option>
+        <option>Court Hearing</option>
+        <option>Filing of Documents</option>
+        <option>Consultation with Advocate</option>
+        <option>Meeting a Court Official</option>
+        <option>Case Search / Records</option>
+        <option>Bail / Bond Matters</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+
+    <div class="field hidden" id="otherField">
+      <label for="fOther">Please specify</label>
+      <input type="text" id="fOther" name="other" placeholder="Describe your purpose of visit">
+    </div>
+
+    <div class="field">
+      <label>Signature</label>
+      <div class="sig-wrap">
+        <div class="sig-inner">
+          <canvas id="sigPad"></canvas>
+          <div class="sig-hint">Sign above &nbsp;×</div>
+        </div>
+      </div>
+      <div class="sig-actions">
+        <span class="sig-note">Draw your signature using mouse or finger</span>
+        <button type="button" class="link-btn" onclick="clearSignature()">Clear</button>
+      </div>
+      <input type="hidden" id="signature" name="signature">
+    </div>
+
+    <p class="note-line">Note: your departure time will be recorded by staff at reception when you leave.</p>
+
+    <div class="form-footer">
+      <button type="submit" class="btn-primary" id="submitBtn">Record Entry</button>
+    </div>
+  </form>
+
+  {% if confirmed %}
+  <div class="stamp show">
+    <div class="entry-no">ENTRY NO. {{ '%05d'|format(entry_id) }}</div>
+    <div class="msg">Your visit has been recorded</div>
+    <div class="sub">{{ name }} · {{ visit_date }} at {{ visit_time }}</div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('fPurpose').addEventListener('change', function(){
+    document.getElementById('otherField').classList.toggle('hidden', this.value !== 'Other');
+  });
+
+  const canvas = document.getElementById('sigPad');
+  const ctx = canvas.getContext('2d');
+  let drawing = false, hasSignature = false;
+
+  function resizeCanvas(){
+    const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+    ctx.scale(ratio, ratio);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1d1815';
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+  }
+  function startDraw(e){ drawing = true; hasSignature = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+  function moveDraw(e){ if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+  function endDraw(){ drawing = false; }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', moveDraw);
+  window.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('touchstart', startDraw, {passive:false});
+  canvas.addEventListener('touchmove', moveDraw, {passive:false});
+  canvas.addEventListener('touchend', endDraw);
+
+  function clearSignature(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    hasSignature = false;
+  }
+
+  document.getElementById('entryForm').addEventListener('submit', function(e){
+    if(!hasSignature){
+      e.preventDefault();
+      alert('Please provide your signature before submitting.');
+      return;
+    }
+    document.getElementById('signature').value = canvas.toDataURL('image/png');
+  });
+</script>
+{% endblock %}

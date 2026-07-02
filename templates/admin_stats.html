@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Statistics — Githunguri Law Courts{% endblock %}
+
+{% block content %}
+<section class="panel">
+  {% include "_admin_subnav.html" %}
+
+  <h2>Visit Statistics</h2>
+  <p class="lede">A summary of activity at Githunguri Law Courts.</p>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="num">{{ total }}</div>
+      <div class="label">All-Time Entries</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">{{ today_count }}</div>
+      <div class="label">Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">{{ week_count }}</div>
+      <div class="label">Last 7 Days</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">{{ month_count }}</div>
+      <div class="label">This Month</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">{{ currently_in }}</div>
+      <div class="label">Currently On Site</div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:8px;">Visits by Purpose</h2>
+  <p class="lede">All-time breakdown of why visitors have come to the courts.</p>
+
+  {% if by_purpose %}
+  <div>
+    {% for p in by_purpose %}
+    <div class="bar-row">
+      <div>{{ p['purpose'] }}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: {{ (p['c'] / max_count * 100) if max_count else 0 }}%;"></div>
+      </div>
+      <div class="bar-count">{{ p['c'] }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="big">No data yet</div>
+    <div>Statistics will appear once visitors start signing in.</div>
+  </div>
+  {% endif %}
+
+  <div class="backup-box">
+    <div>
+      <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted);">
+        Database Backups
+      </div>
+      <div style="margin-top:6px; font-size:13.5px; color:var(--text);">
+        {% if last_backup %}
+          {{ backup_count }} backup{{ 's' if backup_count != 1 else '' }} on file · most recent: <span class="muted" style="font-family:'IBM Plex Mono', monospace;">{{ last_backup }}</span>
+        {% else %}
+          No backups yet.
+        {% endif %}
+      </div>
+    </div>
+    <form method="POST" action="{{ url_for('admin_backup_now') }}">
+      <button type="submit" class="btn-secondary">Backup Now</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
